@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Novo carrossel
+Comment=Abre o Claude Code com o questionário de carrossel (/post)
+Exec=@EXEC@
+Icon=@ICON@
+Terminal=false
+Categories=Graphics;
