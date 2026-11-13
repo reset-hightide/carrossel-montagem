@@ -25,6 +25,14 @@ Ferramentas: ~/.venvs/post/bin/python (python-pptx, Pillow, rembg, scipy). Scrip
    - Preços: "de R$ X por R$ Y" + "-Z%" como etiqueta; data da coleta nas notes de cada slide com preço.
    - Margens seguras 64px; nenhum texto menor que 26px; contraste alto.
    - Cada foto/recorte é um elemento img separado com name descritivo (vira camada no Canva).
+   - SUBLINHADO e BLOCO de destaque: NUNCA retângulo solto posicionado "no olho" atrás de um parágrafo que quebra linha
+     (no Canva a fonte mede diferente e o traço escorrega). O trecho destacado vira caixa PRÓPRIA de 1 linha com
+     "wrap": false e "sub" (traço) ou "bloco" (fundo) — o build_pptx mede com a fonte real e AGRUPA texto+traço.
+     Título de 2-3 linhas = uma caixa por linha. Depois do import, conferir no zoom do Canva os destaques.
+   - SOMBRAS: nunca esticar uma sombra.png genérica. Gerar no tamanho do elemento com
+     `scripts/colagem.py sombra saida.png L A` (e `colagem.py cartao` para papel rasgado/etiqueta); recortes com
+     `cutout.py` (já com margem). Antes do build: `colagem.py checar design/assets` deve dizer "nenhuma sombra cortada"
+     — sombra que encosta na borda do PNG aparece no Canva como corte seco em cima/embaixo.
    - Capas: 10 composições realmente diferentes (não só trocar o texto).
 4. Rode preview.py, OLHE o contact_sheet e cada slide com Read, corrija overflow, alinhamento, hierarquia, peso visual.
    Repita até ficar no nível da referência de estilo ou melhor. Seja crítico: se um slide parecer template genérico, refaça.

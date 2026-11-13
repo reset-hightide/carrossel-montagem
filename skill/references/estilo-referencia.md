@@ -25,6 +25,7 @@ Regra de ouro: daqui vem só a **gramática visual** (montagem). Fontes, cores e
 10. **Fechamento**: resumo + CTA único (salvar, enviar, link na bio). Sem "arrasta".
 
 ## Elementos de colagem
+Sombra sempre suave até sumir (alfa 0 antes da borda do PNG; ver scripts/colagem.py). Sublinhado/bloco sempre como destaque agrupado de 1 linha.
 Fita adesiva, recorte com contorno branco, borda rasgada, polaroid levemente girada, etiqueta de preço, anotação manuscrita
 (serifada itálica) tipo "virou!". Dão o ar "feito à mão" que separa de template.
 

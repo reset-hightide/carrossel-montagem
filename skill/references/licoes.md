@@ -23,3 +23,26 @@
 - Screenshot do editor do Canva trava (timeout); conferir pelo export (conector Canva) ou abrir o design numa aba nova.
 - Limite de 5 hashtags por post no Instagram (desde dez/2025).
 - Versões: congelar a versão antes de cada rodada de feedback (o designer sobrescreve out/).
+- (13/11/2026) preview.py quebra linha a cada run: parágrafo com negrito no meio sai errado no preview.
+  Usar 1 run por parágrafo (negrito vira parágrafo próprio). Fonte variável (Libre Franklin) e arquivo "-Regular"
+  (DM Serif Text) precisam de wrapper: ver <projeto>/design/render.py (também corrige imagem girada fora do centro).
+- (13/11/2026) Sublinhado/bloco de destaque: gerar o spec por script que mede o texto com a fonte real e quebra linhas
+  explícitas (1 parágrafo por linha); assim o rect cai no lugar certo também no Canva.
+
+## 13/11/2026 — marca de orgânicos (Orgânico x Convencional)
+- Questionário UMA pergunta por vez (pedido do usuário). Ele prefere responder em texto; popups de escolha às vezes viram "quero esclarecer".
+- Roteiro do cliente → entregar 2 versões: FIEL (só ortografia, com lista do que corrigiu) e FINAL (melhor post, antes→depois). Manter nº de cartelas pedido.
+- Fotos de Drive compartilhado (não público, gdown 401): ver miniaturas no Chrome (zoom 0.3 + overlay com thumbs), escolher, montar UM .zip no próprio navegador (zip "store" em JS a partir das thumbs =w2400) → 1 download só. Fetch para localhost trava (Chrome pede permissão de rede local) e vários downloads pedem permissão: evitar. Download do Chrome Flatpak cai no ~/Desktop.
+- Canva: NÃO tinha "DM Serif Text" (vira Arimo). A conta permite "Faça upload de uma fonte" (seletor de fontes > fim da lista; confirmar declaração de direito — fontes OFL ok). Subir o .ttf ANTES de importar o pptx: o import mapeia pelo nome da família.
+- Canva editor roda num iframe same-origin de tela cheia: hook de input/file não pega. Para Uploads: criar <input type=file> no documento de cima, file_upload nele, recriar os File no realm do iframe (new w.File([buf], nome, {type})) e disparar dragenter/dragover/drop no painel de Uploads do iframe. File de outro realm = "arquivo incompatível".
+- Nunca digitar com o canvas focado: letras viram atalhos (R = retângulo). Focar a busca de fontes antes de digitar.
+- Revisor Meta pegou citação legal errada (Lei 10.831 não fala de agrotóxico; é Decreto 6.323/2007 + Portaria MAPA 52/2021). Sempre conferir a lei citada no texto.
+- Foto de cliente com placa de carro legível: tirar (LGPD/imagem). Diretor e cliente simulado pegaram.
+- Import de pptx NÃO usa fonte carregada (cai em Arimo mesmo com o nome certo). Correção: abrir o design, clicar num texto em Arimo, escolher a fonte carregada no seletor → aparece "Alterar tudo: Arimo → X" → "Todas as páginas". Funciona porque as fontes nativas (ex.: Libre Franklin) mapeiam certo e só as que faltam viram Arimo.
+- Feedback do usuário (13/11): sublinhados fora do lugar e sombras com "corte seco" em cima/embaixo.
+  Causas: (1) traço = retângulo solto medido com a fonte local; no Canva a quebra/medida muda. (2) sombra.png quadrada
+  esticada até o tamanho da foto; cartões com margem menor que deslocamento+3σ do desfoque; cutout.py usava
+  ImageChops.offset (dá a volta: a sombra de baixo aparecia no topo) e margem 3×contorno.
+  Correções na skill: build_pptx/preview com "sub"/"bloco" (caixa de 1 linha, medida com a fonte real e agrupada),
+  scripts/colagem.py (sombra no tamanho certo, cartão com margem, `checar` bordas), cutout.py com margem 7× e sem wrap,
+  preview acha fontes via fontconfig e aplica peso em fonte variável.
