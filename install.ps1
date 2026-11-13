@@ -8,6 +8,8 @@ $Dest = "$Claude\skills\carrossel-montagem"
 if (Test-Path $Dest) { New-Item -ItemType Directory -Force -Path "$Claude\skills-backup" | Out-Null; Move-Item $Dest "$Claude\skills-backup\carrossel-montagem.$(Get-Date -Format yyyyMMddHHmmss)" }
 Copy-Item -Recurse "$Here\skill" $Dest
 Copy-Item "$Here\commands\post.md" "$Claude\commands\post.md" -Force
+$Cw = "$Claude\skills\copywriting-ptbr"; if (Test-Path $Cw) { Remove-Item -Recurse -Force $Cw }
+Copy-Item -Recurse "$Here\extras\copywriting-ptbr" $Cw
 Write-Host "skill instalada e comando /post criado"
 
 $Venv = "$HOME\.venvs\post"

@@ -15,6 +15,9 @@ if [ -e "$DEST" ] && [ ! -L "$DEST" ]; then mkdir -p "$CLAUDE_DIR/skills-backup"
 rm -f "$DEST" 2>/dev/null || true
 if [ "$MODE" = link ]; then ln -s "$HERE/skill" "$DEST"; else cp -r "$HERE/skill" "$DEST"; fi
 cp "$HERE/commands/post.md" "$CLAUDE_DIR/commands/post.md"
+# skill de texto que o carrossel usa (copywriting localizado para pt-BR)
+CW="$CLAUDE_DIR/skills/copywriting-ptbr"; rm -rf "$CW"
+if [ "$MODE" = link ]; then ln -s "$HERE/extras/copywriting-ptbr" "$CW"; else cp -r "$HERE/extras/copywriting-ptbr" "$CW"; fi
 echo "skill instalada em $DEST ($MODE) e comando /post criado"
 
 # Ambiente Python das ferramentas (pptx, recorte, preview)

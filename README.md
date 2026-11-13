@@ -3,7 +3,7 @@
 Skill para o [Claude Code](https://docs.claude.com/en/docs/claude-code) que produz carrosséis de Instagram para clientes,
 do briefing ao design editável no Canva.
 
-Você digita `/post` (ou clica no atalho da área de trabalho), responde um questionário curto sobre a marca e a campanha,
+Você digita `/post` (ou clica no atalho da área de trabalho), responde uma entrevista curta, uma pergunta por vez, sobre a marca e a campanha,
 e o fluxo faz o resto:
 
 1. **Coleta**: site, produtos e preços, identidade visual (brandbook, pasta do Drive, Canva Brand Kit ou, na falta,
@@ -18,6 +18,15 @@ e o fluxo faz o resto:
 6. **Conferência legal**: preços conferidos no site na hora, fotos comparadas com a galeria oficial de cada produto,
    aviso de "preços sujeitos a alteração".
 7. **Canva**: importa o `.pptx` (vira design editável), sobe as fotos em Uploads e guarda a versão anterior ao feedback.
+
+Junto vem a skill `copywriting-ptbr` (em `extras/`), que o instalador também coloca: copywriting **localizado** para o
+português do Brasil (não traduzido) a partir de [boraoztunc/skills](https://github.com/boraoztunc/skills), com CDC,
+CONAR e cuidados com alegação de saúde. O `skill/references/instagram-playbook.md` é uma localização das skills de
+[sergebulaev/instagram-skills](https://github.com/sergebulaev/instagram-skills) (MIT).
+
+Ferramentas de colagem: `build_pptx.py` faz sublinhado e bloco de destaque agrupados com o texto e medidos com a fonte
+real (não escorregam no Canva). `colagem.py` gera sombras suaves no tamanho certo de cada foto e tem `checar`, que
+aponta PNG com sombra cortada na borda.
 
 Cada marca atendida ganha um perfil em `~/.claude/carrossel-marcas/`, então o próximo post da mesma marca pede bem menos informação.
 
