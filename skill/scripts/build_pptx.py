@@ -23,6 +23,11 @@ spec = {
 Texto: cada item de "runs" pode ter "br": true para quebrar parágrafo antes dele.
 Destaque editorial (bloco colorido atrás da linha): use um "rect" atrás do "text" (mais editável no Canva
 que highlight de run, que o Canva ignora).
+SUBLINHADO/BLOCO QUE NÃO ESCORREGA NO CANVA: o trecho destacado vira uma caixa de texto PRÓPRIA, de UMA linha,
+sem quebra automática, e o traço/bloco é medido com a fonte real e AGRUPADO com ela:
+  {"t":"text", ..., "wrap": false, "sub": {"color":"#B5F52D","h":8,"dy":2}}      -> traço logo abaixo da linha
+  {"t":"text", ..., "wrap": false, "bloco": {"color":"#B5452A","padx":12,"pady":4}} -> bloco atrás da linha
+Nunca sublinhar um trecho no meio de um parágrafo que quebra linha: quebre o título em caixas, uma por linha.
 """
 import json, sys, os
 from pptx import Presentation
@@ -98,7 +103,7 @@ def add_line(sl, e):
 
 def add_text(sl, e, fonts):
     tb = sl.shapes.add_textbox(Emu(int(e['x'] * PX)), Emu(int(e['y'] * PX)), Emu(int(e['w'] * PX)), Emu(int(e['h'] * PX)))
-    tf = tb.text_frame; tf.word_wrap = True
+    tf = tb.text_frame; tf.word_wrap = e.get('wrap', True)
     pad = Emu(int(e.get('pad', 0) * PX))
     tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = pad
     tf.vertical_anchor = {'t': MSO_ANCHOR.TOP, 'm': MSO_ANCHOR.MIDDLE, 'b': MSO_ANCHOR.BOTTOM}[e.get('valign', 't')]
@@ -125,6 +130,55 @@ def add_text(sl, e, fonts):
     tb.name = e.get('name', (e['runs'][0]['txt'][:30] if e['runs'] else 'texto'))
     return tb
 
+import subprocess
+from PIL import ImageFont
+_fc = {}
+def font_path(family, bold=False, italic=False):
+    k = (family, bold, italic)
+    if k not in _fc:
+        st = ('Bold ' if bold else '') + ('Italic' if italic else '')
+        q = family + (':style=' + st.strip() if st.strip() else '')
+        _fc[k] = subprocess.run(['fc-match', '-f', '%{file}', q], capture_output=True, text=True).stdout.strip()
+    return _fc[k]
+
+def text_width(e, fonts):
+    w = 0
+    for r in e['runs']:
+        fam = fonts.get(r.get('font', 'body'), r.get('font', 'body'))
+        fp = font_path(fam, r.get('bold', False), r.get('italic', False))
+        try:
+            f = ImageFont.truetype(fp, int(r.get('size', 32)))
+            try:  # fonte variável (ex.: LibreFranklin[wght].ttf): aplica o peso certo antes de medir
+                axes = f.get_variation_axes()
+                if axes: f.set_variation_by_axes([700 if r.get('bold') else 400] + [a['default'] for a in axes[1:]])
+            except Exception:
+                pass
+            w += f.getlength(r['txt'].upper() if e.get('caps') else r['txt'])
+        except Exception:
+            w += len(r['txt']) * r.get('size', 32) * 0.5
+        sp = r.get('spacing', e.get('spacing'))
+        if sp: w += sp * len(r['txt'])
+    return w
+
+def add_destaque(sl, e, fonts):
+    """caixa de 1 linha + traço/bloco medido com a fonte real, agrupados (movem juntos no Canva)."""
+    tw = text_width(e, fonts)
+    x0 = e['x'] + (e['w'] - tw if e.get('align') == 'r' else (e['w'] - tw) / 2 if e.get('align') == 'c' else 0)
+    grp = sl.shapes.add_group_shape()
+    els = []
+    if e.get('bloco'):
+        b = e['bloco']; px, py = b.get('padx', 12), b.get('pady', 4)
+        els.append({'t': 'rect', 'x': x0 - px, 'y': e['y'] - py, 'w': tw + 2 * px, 'h': e['h'] + 2 * py, 'fill': b['color'], 'name': 'bloco destaque'})
+    for r in els:
+        add_rect(grp, r)
+    # caixa abraça o texto (+4%): no Canva o traço/bloco e o texto ficam do mesmo tamanho
+    add_text(grp, dict(e, wrap=False, x=x0, w=tw * 1.04 + 4, align='l'), fonts)
+    if e.get('sub'):
+        u = e['sub']
+        add_rect(grp, {'t': 'rect', 'x': x0, 'y': e['y'] + e['h'] + u.get('dy', 2), 'w': tw, 'h': u.get('h', 8), 'fill': u['color'], 'name': 'sublinhado destaque'})
+    grp.name = 'destaque: ' + ''.join(r['txt'] for r in e['runs'])[:30]
+    return grp
+
 def build(spec, out):
     prs = Presentation()
     W, H = spec.get('w', 1080), spec.get('h', 1350)
@@ -136,6 +190,8 @@ def build(spec, out):
         if s.get('bg'):
             sl.background.fill.solid(); sl.background.fill.fore_color.rgb = rgb(s['bg'])
         for e in s.get('els', []):
+            if e['t'] == 'text' and (e.get('sub') or e.get('bloco')):
+                add_destaque(sl, e, fonts); continue
             {'img': add_img, 'rect': add_rect, 'line': add_line}.get(e['t'], lambda a, b: add_text(a, b, fonts))(sl, e)
         if s.get('notes'):
             sl.notes_slide.notes_text_frame.text = s['notes']

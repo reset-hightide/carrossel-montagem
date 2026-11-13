@@ -36,15 +36,22 @@ if (bg.mean() > 0.15):  # só usa o híbrido se há fundo claro de verdade
     cut = im.convert('RGBA'); cut.putalpha(m)
 bbox = cut.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
 cut = cut.crop(bbox); cut.save(a.out + '.png')
-o = a.outline; pad = o * 3
+o = a.outline
+# margem = contorno + deslocamento da sombra + 3σ do desfoque + folga: a sombra precisa chegar a alfa 0 antes da borda
+pad = o * 7
 base = Image.new('RGBA', (cut.width + 2 * pad, cut.height + 2 * pad), (0, 0, 0, 0)); base.paste(cut, (pad, pad), cut)
 alpha = base.getchannel('A').point(lambda v: 255 if v > 40 else 0)
 grown = alpha.filter(ImageFilter.MaxFilter(o * 2 + 1)).filter(ImageFilter.GaussianBlur(1))
 shadow = grown.filter(ImageFilter.GaussianBlur(o)).point(lambda v: int(v * 0.35))
 st = Image.new('RGBA', base.size, (0, 0, 0, 0))
-sh = Image.new('RGBA', base.size, (0, 0, 0, 255)); sh.putalpha(ImageChops.offset(shadow, o // 2, o))
+# deslocamento SEM dar a volta (ImageChops.offset faz wrap: a sombra de baixo reaparecia no topo)
+shifted = Image.new('L', base.size, 0); shifted.paste(shadow, (o // 2, o))
+sh = Image.new('RGBA', base.size, (0, 0, 0, 255)); sh.putalpha(shifted)
 st = Image.alpha_composite(st, sh)
 wh = Image.new('RGBA', base.size, (255, 255, 255, 255)); wh.putalpha(grown)
 st = Image.alpha_composite(st, wh); st = Image.alpha_composite(st, base)
-st.crop(st.getchannel('A').getbbox()).save(a.out + '_sticker.png')
+bb = st.getchannel('A').point(lambda v: 255 if v > 0 else 0).getbbox()
+x0, y0, x1, y1 = bb; m2 = 4  # folga transparente: nada encosta na borda
+st = st.crop((max(0, x0 - m2), max(0, y0 - m2), min(st.width, x1 + m2), min(st.height, y1 + m2)))
+st.save(a.out + '_sticker.png')
 print('ok', a.out + '.png', a.out + '_sticker.png', cut.size)
