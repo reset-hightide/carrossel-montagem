@@ -13,11 +13,13 @@ e o fluxo faz o resto:
 3. **Boas práticas do Instagram**: capa curta, segundo slide como "segunda capa", gatilhos de salvar/enviar,
    CTA único, até 5 hashtags, texto alternativo.
 4. **Design**: montagem editorial (colagem, recortes, números grandes, blocos de destaque) com as fontes, cores e logo
-   da marca. Gera um `.pptx` com cada foto e texto em camada separada.
+   da marca. O carrossel é **panorâmico**: desenhado como uma tira contínua, com fotos, recortes e painéis que
+   atravessam a divisa e continuam no slide seguinte. Gera um `.pptx` com cada foto e texto em camada separada.
+   Os recortes (remoção de fundo) são feitos no ChatGPT com um prompt de preservação total da foto original.
 5. **Revisão**: diretor de criação + uma reunião simulada com o cliente, depois uma rodada de ajustes.
 6. **Conferência legal**: preços conferidos no site na hora, fotos comparadas com a galeria oficial de cada produto,
    aviso de "preços sujeitos a alteração".
-7. **Canva**: importa o `.pptx` (vira design editável), sobe as fotos em Uploads e guarda a versão anterior ao feedback.
+7. **Canva**: importa o `.pptx` (vira design editável), mais um **design único** com a tira inteira em páginas largas, sobe as fotos em Uploads e guarda a versão anterior ao feedback.
 
 Junto vem a skill `copywriting-ptbr` (em `extras/`), que o instalador também coloca: copywriting **localizado** para o
 português do Brasil (não traduzido) a partir de [boraoztunc/skills](https://github.com/boraoztunc/skills), com CDC,
@@ -94,7 +96,8 @@ Ficam em `skill/scripts/` e podem ser usados sozinhos:
 |---|---|
 | `build_pptx.py spec.json saida.pptx` | monta o `.pptx` a partir de um JSON (imagens, retângulos, textos, linhas) |
 | `preview.py spec.json pasta/` | renderiza PNGs e um contact sheet para revisar, avisando texto que estoura |
-| `cutout.py foto.jpg saida` | recorta o produto (rembg + preenchimento do fundo) e gera a versão "sticker" |
+| `panorama.py fatiar/unico/checar pano.json` | carrossel panorâmico: fatia a tira em slides, monta o design único e confere as divisas |
+| `cutout.py recorte.png saida` | recebe o PNG transparente do ChatGPT e gera a versão "sticker" (sem PNG transparente, recorta com rembg como plano B) |
 | `optimize_pptx.py in.pptx out.pptx --max 1600` | reduz o `.pptx` para menos de 10 MB sem perda visível |
 | `parse_fbits.py pagina.html ...` | extrai produtos e preços de lojas Tray/Fbits |
 
