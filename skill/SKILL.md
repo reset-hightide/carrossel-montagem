@@ -5,7 +5,14 @@ description: Cria carrosséis de Instagram nível agência para qualquer marca (
 
 # Carrossel montagem
 
-Objetivo: carrossel no nível de uma agência premium. A **gramática visual** (montagem/colagem) vem da referência de estilo;
+Objetivo: carrossel no nível de uma agência premium.
+**Carrossel PANORÂMICO é o padrão**: o post é desenhado como uma tira contínua e as imagens EMENDAM entre os slides
+(metade de uma foto/carta/objeto/painel no fim de um slide e a outra metade no começo do próximo), como nos carrosséis
+panorâmicos de referência. Nunca deixar uma imagem cortada na borda
+sem a continuação no slide vizinho. Além dos quadrados, entregar um **design único** no Canva com a tira inteira
+(páginas largas de até 7560 x 1350). Ferramenta: `scripts/panorama.py`.
+
+A **gramática visual** (montagem/colagem) vem da referência de estilo;
 **fontes, logos e cores vêm SEMPRE da marca do cliente**. Nada de dado inventado: todo número tem fonte e data.
 
 Python das ferramentas: `~/.venvs/post/bin/python` (Windows: `~/.venvs/post/Scripts/python.exe`). Scripts em `scripts/`
@@ -62,20 +69,31 @@ fontes, paleta, logos, tom, regras, contatos de aprovação, histórico de posts
 2. **Revisor ex-Meta** (antes do design): `references/meta-boas-praticas.md` + `references/instagram-playbook.md` (algoritmo, formatos C1–C4, legenda, hashtags BR, humanizador pt-BR). Capa ≤ 8 palavras, slide 2 como 2ª capa,
    gatilhos de envio/salvamento, CTA único, ≤ 5 hashtags, alt text, marcação de produto/collab.
 3. **Designer**: `references/prompt-agente-designer.md`. Gera `design/spec_carrossel.json` e `spec_capas.json`
-   para `scripts/build_pptx.py`, recortes com `scripts/cutout.py`, revisa com `scripts/preview.py`.
+   para `scripts/build_pptx.py`, revisa com `scripts/preview.py`. **Spec panorâmico**: o designer escreve
+   `design/pano_carrossel.json` (tira de n x 1080) e gera `spec_carrossel.json` com `panorama.py fatiar` e
+   `spec_unico.json` com `panorama.py unico`; `panorama.py checar` sem ERRO (texto nunca cruza divisa).
+   **Recortes: SEMPRE no ChatGPT** com o prompt D de
+   `references/prompts-chatgpt.md` (remoção de fundo, colado sem alterar); `scripts/cutout.py` só recebe o PNG
+   transparente e gera o sticker/sombra. rembg só como plano B, registrado em `design/pendencias_ia.md`.
+   **Com versão FIEL: a FIEL vem PRIMEIRO** (texto já fechado, não depende de revisão): o designer constrói a FIEL,
+   gera o pptx e você já importa no Canva; só depois FINAL e capas (que passam por diretor + cliente simulado).
+   Assim a entrega mais simples fica garantida mesmo se a sessão ou o limite de uso acabar.
 4. **Congelar versão 1** (ver "Versões").
 5. **Diretor de criação** (checklist da seção 4) **+ cliente simulado** (`references/prompt-cliente-simulado.md`), em paralelo.
 6. **Rodada 2**: o mesmo designer (SendMessage) aplica os obrigatórios dos dois; você decide os conflitos.
 Avise o usuário em 1 linha a cada etapa concluída.
 
 ## 3. ChatGPT (Chrome, usuário logado em chatgpt.com)
-Sempre aba nova. Prompts em `references/prompts-chatgpt.md`: linguagem natural, edição de foto ultra-realista, upscale.
+Sempre aba nova. Prompts em `references/prompts-chatgpt.md`: linguagem natural, edição de foto ultra-realista, upscale,
+**remoção de fundo (D — padrão para todo recorte)**.
 Conferir número a número depois. Nunca usar IA para inventar o produto: modelo e cor têm que bater com o site.
 
 ## 4. Checklist de qualidade
 - [ ] Todo número confere com o site/fonte e tem data nas notas do slide.
 - [ ] Foto de cada produto é do modelo, cor e versão certos.
 - [ ] Variedade visual: nenhum slide com o mesmo layout do anterior.
+- [ ] Panorâmico: imagens emendam entre slides (`panorama.py checar`: ponte em pelo menos metade das divisas), nenhuma
+      imagem cortada na borda sem continuação, nenhum texto cruzando divisa; corte não passa por rosto/logo/preço.
 - [ ] Fontes/cores/logo da marca; gramática da referência.
 - [ ] Último slide = resumo + CTA; legenda com pergunta, "salva e manda" e fontes.
 - [ ] Texto natural e enxuto (≤ ~30 palavras por slide interno). Sem "ARRASTA" na capa/slide 2.
@@ -83,6 +101,10 @@ Conferir número a número depois. Nunca usar IA para inventar o produto: modelo
 - [ ] Pré-entrega do `references/instagram-playbook.md` (seção 9) e humanizador pt-BR (seção 6).
 
 ## 5. Build e Canva
+- Design único (tira inteira): `panorama.py unico pano.json spec_unico.json` → build → optimize → import como os outros.
+  Páginas de até 7 slides (limite do Canva 8000 px), divididas por igual. O pptx tem limite de 56 pol (5376 px), então
+  o script reduz a escala e imprime o tamanho cheio: depois do import, conferir o tamanho da página e, se precisar,
+  redimensionar no Canva (resize-design) para o tamanho cheio. Nome: "<Marca> <Campanha> - FINAL - Design único".
 - `scripts/build_pptx.py spec.json out.pptx` → `scripts/optimize_pptx.py out.pptx "<nome> (canva).pptx" --max 1600` (< 10 MB).
 - Fontes no spec pelo NOME DA FAMÍLIA + bold (o Canva ignora peso no nome: "Poppins Black" vira Poppins fino).
 - ANTES do build: confirmar no seletor de fontes do Canva que cada família existe (ex.: "DM Serif Text" não é nativa → vira Arimo). Se faltar: seletor de fontes > "Faça upload de uma fonte" com o .ttf (licença livre/da marca), e, depois do import (que cai em Arimo), selecionar um texto em Arimo > escolher a fonte carregada > "Alterar tudo" > "Todas as páginas". Depois do import, clicar num título e conferir o nome da fonte na barra.
@@ -90,7 +112,7 @@ Conferir número a número depois. Nunca usar IA para inventar o produto: modelo
   `HTMLInputElement.prototype.click` → se `type=file`, anexa o input ao body e retorna. Criar > "Fazer upload" (scroll_to + click)
   > `find` "input type=file" > `file_upload`. A aba vai para /design/<ID>/edit.
 - Fotos e recortes em Uploads: o editor roda num iframe same-origin de tela cheia (o hook não pega). Criar um `<input type=file multiple>` no documento de cima, `file_upload` nele (lotes < 9 MB), recriar cada File no realm do iframe (`new w.File([await f.arrayBuffer()], f.name, {type})`) e disparar dragenter/dragover/drop num ancestral do botão "Fazer upload de arquivos" dentro do iframe. Nunca digitar com o canvas focado (letras = atalhos).
-- Nomes: "<Marca> <Campanha> - FINAL - Carrossel" / "- FINAL - Capas" / "- V1 antes do cliente - …".
+- Nomes: "<Marca> <Campanha> - FINAL - Carrossel" / "- FINAL - Capas" / "- FINAL - Design único" / "- V1 antes do cliente - …".
 - Edições pequenas depois (texto, foto, título): conector Canva (`read-design` com transaction → `edit-design` → commit
   só depois de mostrar o preview, ou quando o pedido do usuário já é exatamente aquela mudança).
 - Conferência visual: `export-design` (jpg, width 540) e olhar; screenshot do editor costuma travar.
@@ -111,6 +133,6 @@ CÓPIA dos assets, out/ com pptx, previews e o feedback). No Canva, manter "V1 a
 - Mensagens para terceiros (cliente, WhatsApp) só com pedido explícito do usuário.
 
 ## 7. Entrega e melhoria contínua
-Resumo final: links do Canva (FINAL e V1), pasta local, legenda pronta, pendências para o cliente real.
+Resumo final: links do Canva (FINAL, Design único e V1), pasta local, legenda pronta, pendências para o cliente real.
 Acrescente em `references/licoes.md` o que deu certo/errado (com data) e atualize o perfil da marca.
 Pergunte uma nota de 0 a 10 e o que faltou para 10.
