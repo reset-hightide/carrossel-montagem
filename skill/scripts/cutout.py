@@ -2,9 +2,13 @@
 """Recorta o produto do fundo (rembg) e gera PNG transparente + versão "sticker" (contorno branco + sombra),
 o recorte estilo colagem editorial.
 
-Uso: ~/.venvs/post/bin/python cutout.py entrada.jpg saida_base [--outline 14] [--model isnet-general-use]
+Uso: ~/.venvs/post/bin/python cutout.py entrada.(png|jpg) saida_base [--outline 14] [--model isnet-general-use]
 Gera: saida_base.png (só recorte, cortado rente) e saida_base_sticker.png
-Dica: fotos de catálogo com fundo branco recortam quase perfeito; confira bordas de inox/vidro no zoom.
+
+PADRÃO (desde 18/11/2026): o recorte é feito no ChatGPT com o prompt D de references/prompts-chatgpt.md.
+Passe aqui o PNG transparente que o ChatGPT devolveu: o script detecta o alfa real, NÃO roda o rembg e só
+apara + gera o sticker/sombra. Sem alfa real (JPG, ou PNG com fundo/quadriculado "pintado") ele avisa e
+cai no rembg, que é só plano B (qualidade inferior; anotar em design/pendencias_ia.md).
 """
 import sys, argparse
 from PIL import Image, ImageFilter, ImageChops
@@ -14,26 +18,38 @@ ap = argparse.ArgumentParser(); ap.add_argument('src'); ap.add_argument('out')
 ap.add_argument('--outline', type=int, default=14); ap.add_argument('--model', default='isnet-general-use')
 ap.add_argument('--white', type=int, default=238); ap.add_argument('--minhole', type=int, default=400)
 a = ap.parse_args()
-im = Image.open(a.src).convert('RGB')
-cut = remove(im, session=new_session(a.model), post_process_mask=True)
+src = Image.open(a.src)
+has_alpha = src.mode in ('RGBA', 'LA') or (src.mode == 'P' and 'transparency' in src.info)
+if has_alpha:
+    _A = src.convert('RGBA').getchannel('A'); _w, _h = _A.size
+    corners = [_A.getpixel(p) for p in ((0, 0), (_w - 1, 0), (0, _h - 1), (_w - 1, _h - 1))]
+    has_alpha = max(corners) < 16 and _A.getextrema()[0] == 0
+if has_alpha:  # recorte já pronto (ChatGPT): preservar pixels, só aparar e fazer o sticker
+    print('alfa real detectado: usando o recorte do arquivo (sem rembg)')
+    cut = src.convert('RGBA'); im = None
+else:
+    print('AVISO: sem alfa real -> rembg (plano B). Padrão é recortar no ChatGPT (prompts-chatgpt.md, D).')
+    im = src.convert('RGB')
+    cut = remove(im, session=new_session(a.model), post_process_mask=True)
 # Híbrido p/ foto de catálogo em fundo claro: fundo = região quase-branca ligada à borda (flood fill).
 # Pixels cromados/brancos DENTRO do produto voltam a ser opacos; buracos fechados quase-brancos
 # grandes que o rembg marcou como fundo continuam transparentes.
 import numpy as np
 from scipy import ndimage
-arr = np.asarray(im).astype(int); near = (arr.min(axis=2) >= a.white)
-lab, n = ndimage.label(near)
-border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
-bg = np.isin(lab, list(border))
-rm = np.asarray(cut.getchannel('A')) > 128
-hole = near & ~bg & ~rm
-hl, hn = ndimage.label(hole); sizes = ndimage.sum(hole, hl, range(1, hn + 1))
-big = np.isin(hl, [i + 1 for i, sz in enumerate(sizes) if sz > a.minhole])
-if (bg.mean() > 0.15):  # só usa o híbrido se há fundo claro de verdade
-    fg = ~bg & ~big
-    fg = ndimage.binary_opening(fg, iterations=1)
-    m = Image.fromarray((fg * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(0.8))
-    cut = im.convert('RGBA'); cut.putalpha(m)
+if im is not None:
+  arr = np.asarray(im).astype(int); near = (arr.min(axis=2) >= a.white)
+  lab, n = ndimage.label(near)
+  border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
+  bg = np.isin(lab, list(border))
+  rm = np.asarray(cut.getchannel('A')) > 128
+  hole = near & ~bg & ~rm
+  hl, hn = ndimage.label(hole); sizes = ndimage.sum(hole, hl, range(1, hn + 1))
+  big = np.isin(hl, [i + 1 for i, sz in enumerate(sizes) if sz > a.minhole])
+  if (bg.mean() > 0.15):  # só usa o híbrido se há fundo claro de verdade
+      fg = ~bg & ~big
+      fg = ndimage.binary_opening(fg, iterations=1)
+      m = Image.fromarray((fg * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(0.8))
+      cut = im.convert('RGBA'); cut.putalpha(m)
 bbox = cut.getchannel('A').point(lambda v: 255 if v > 20 else 0).getbbox()
 cut = cut.crop(bbox); cut.save(a.out + '.png')
 o = a.outline

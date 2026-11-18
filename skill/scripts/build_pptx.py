@@ -28,6 +28,8 @@ sem quebra automática, e o traço/bloco é medido com a fonte real e AGRUPADO c
   {"t":"text", ..., "wrap": false, "sub": {"color":"#B5F52D","h":8,"dy":2}}      -> traço logo abaixo da linha
   {"t":"text", ..., "wrap": false, "bloco": {"color":"#B5452A","padx":12,"pady":4}} -> bloco atrás da linha
 Nunca sublinhar um trecho no meio de um parágrafo que quebra linha: quebre o título em caixas, uma por linha.
+CARROSSEL PANORÂMICO (imagens atravessando de um slide para o outro): escreva o spec como uma tira só e use
+scripts/panorama.py para gerar o spec por slide e o spec "design único" (ver docstring de lá).
 """
 import json, sys, os
 from pptx import Presentation
@@ -38,7 +40,8 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
 from PIL import Image
 
-PX = 9525  # EMU por pixel (96 dpi)
+PX = 9525  # EMU por pixel (96 dpi); spec "escala" (ex.: 0.5) multiplica tudo, inclusive fontes
+FS = 1.0
 
 def rgb(h):
     h = h.lstrip('#')
@@ -115,17 +118,17 @@ def add_text(sl, e, fonts):
         if r.get('br') and not first:
             p = tf.add_paragraph(); p.alignment = al
             if e.get('lh'): p.line_spacing = e['lh']
-            if r.get('space_before'): p.space_before = Pt(r['space_before'] * 0.75)
+            if r.get('space_before'): p.space_before = Pt(r['space_before'] * 0.75 * FS)
         first = False
         run = p.add_run(); run.text = r['txt'].upper() if e.get('caps') else r['txt']
         f = run.font
-        f.size = Pt(r.get('size', 32) * 0.75)  # px -> pt
+        f.size = Pt(r.get('size', 32) * 0.75 * FS)  # px -> pt
         f.bold = r.get('bold', False); f.italic = r.get('italic', False)
         fname = r.get('font', 'body'); f.name = fonts.get(fname, fname)
         f.color.rgb = rgb(r.get('color', '#FFFFFF'))
         sp = r.get('spacing', e.get('spacing'))
         if sp:
-            run._r.get_or_add_rPr().set('spc', str(int(sp * 75)))  # px -> centésimos de pt
+            run._r.get_or_add_rPr().set('spc', str(int(sp * 75 * FS)))  # px -> centésimos de pt
     if e.get('rot'): tb.rotation = e['rot']
     tb.name = e.get('name', (e['runs'][0]['txt'][:30] if e['runs'] else 'texto'))
     return tb
@@ -180,6 +183,8 @@ def add_destaque(sl, e, fonts):
     return grp
 
 def build(spec, out):
+    global PX, FS
+    FS = spec.get('escala', 1.0); PX = int(9525 * FS)
     prs = Presentation()
     W, H = spec.get('w', 1080), spec.get('h', 1350)
     prs.slide_width = Emu(W * PX); prs.slide_height = Emu(H * PX)
