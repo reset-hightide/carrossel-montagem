@@ -32,3 +32,8 @@ Fita adesiva, recorte com contorno branco, borda rasgada, polaroid levemente gir
 ## Legenda
 Gancho de 1 linha (repete a capa) → contexto com números → itens numerados 1️⃣2️⃣3️⃣ → ressalva honesta → pergunta →
 "salva e manda pra…" → fontes → até 5 hashtags.
+
+## Carrossel panorâmico (padrão desde 18/11/2026)
+O post é uma tira contínua: imagens, cartas, recortes e painéis de cor atravessam a divisa entre slides, metade de
+cada lado, e convidam a arrastar sem precisar escrever "arrasta". Design único de exemplo: páginas de 7560 x 1350, 7 slides cada, com objetos (uma espada, um leque
+de cartas, flores) atravessando as divisas.

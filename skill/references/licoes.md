@@ -46,3 +46,13 @@
   Correções na skill: build_pptx/preview com "sub"/"bloco" (caixa de 1 linha, medida com a fonte real e agrupada),
   scripts/colagem.py (sombra no tamanho certo, cartão com margem, `checar` bordas), cutout.py com margem 7× e sem wrap,
   preview acha fontes via fontconfig e aplica peso em fonte variável.
+
+## 2026-11-18 — recortes
+- Recortes feitos com rembg/cutout.py não tinham qualidade boa o suficiente (reclamação do usuário). Agora TODO recorte
+  é no ChatGPT com o prompt D de prompts-chatgpt.md; cutout.py detecta o alfa e só faz sticker/sombra.
+
+## 2026-11-18 — panorâmico + design único
+- Imagem cortada na borda de um slide SEM a outra metade no slide seguinte foi criticada. Padrão agora: carrossel
+  panorâmico (scripts/panorama.py), com pontes entre slides, e um "design único" extra no Canva com a tira inteira.
+- pptx aceita no máximo 56 pol (5376 px a 96 dpi) de lado: o design único sai em escala reduzida e é redimensionado
+  no Canva. Primeira vez em projeto real: conferir como o Canva importou o tamanho e registrar aqui.
